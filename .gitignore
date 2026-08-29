@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs & cache
+dist/
+dist-server/
+coverage/
+*.tsbuildinfo
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+service-account*.json
+credentials.json
+
+# Firebase & IDE logs
+.firebase/
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+*.log
+.antigravity/
+
+# System
+.DS_Store
+Thumbs.db

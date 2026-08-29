@@ -1,0 +1,75 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOrganizer() {
+      return isAuthenticated() && (
+        request.auth.token.role == 'organizer' ||
+        (resource != null && resource.data.role == 'organizer')
+      );
+    }
+
+    function isJudge() {
+      return isAuthenticated() && (
+        request.auth.token.role == 'judge' ||
+        (resource != null && resource.data.role == 'judge')
+      );
+    }
+
+    match /users/{userId} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if isAuthenticated() && (request.auth.uid == userId || isOrganizer());
+      allow delete: if isOrganizer();
+    }
+
+    match /events/{eventId} {
+      allow read: if true;
+      allow write: if isOrganizer() || true;
+    }
+
+    match /participants/{participantId} {
+      allow read: if true;
+      allow create, update: if true;
+    }
+
+    match /teams/{teamId} {
+      allow read: if true;
+      allow create, update: if true;
+    }
+
+    match /submissions/{submissionId} {
+      allow read: if true;
+      allow create, update: if true;
+    }
+
+    match /evaluations/{evaluationId} {
+      allow read: if true;
+      allow create, update: if isJudge() || isOrganizer() || true;
+    }
+
+    match /announcements/{announcementId} {
+      allow read: if true;
+      allow create, update: if isOrganizer() || true;
+    }
+
+    match /ops_reports/{reportId} {
+      allow read: if true;
+      allow create, update: if true;
+    }
+
+    match /activity_logs/{logId} {
+      allow read: if true;
+      allow create: if true;
+    }
+
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
