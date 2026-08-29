@@ -10,7 +10,7 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const app = express();
+export const app = express();
 const PORT = process.env.PORT || 8080;
 
 app.use(cors());
@@ -19,7 +19,7 @@ app.use(express.json());
 // API Routes
 app.use('/api', apiRouter);
 
-// Serve Vite production build static assets in production
+// Serve Vite production build static assets in production (for Cloud Run / Docker)
 const distPath = path.resolve(__dirname, '../dist');
 app.use(express.static(distPath));
 
@@ -30,6 +30,11 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(distPath, 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`⚡ VEYRA Event OS Server running on port ${PORT}`);
-});
+// Run HTTP listener only when running directly (standalone Node.js / Docker / Cloud Run)
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`⚡ VEYRA Event OS Server running on port ${PORT}`);
+  });
+}
+
+export default app;

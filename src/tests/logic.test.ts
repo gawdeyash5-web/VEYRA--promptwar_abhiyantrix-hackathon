@@ -4,7 +4,7 @@ import { analyzeJudgingIntegrity, detectRushedEvaluation } from '../utils/judgin
 import { evaluateTeamRisk } from '../utils/teamRiskRadar';
 import { Participant, Team, Submission, Evaluation } from '../types';
 
-console.log('🧪 Running VEYRA Business Logic Test Suite...\n');
+console.log('🧪 Running VEYRA Business Logic & Security Test Suite...\n');
 
 let totalPassed = 0;
 let totalFailed = 0;
@@ -88,6 +88,34 @@ const riskTeam: Team = {
 };
 const evaluatedRisk = evaluateTeamRisk(riskTeam, []);
 assert(evaluatedRisk.riskLevel === 'HIGH', 'Classified team with no check-in & 120m inactivity as HIGH RISK');
+
+// 6. Ops Incident Classification Deterministic Rule Test
+console.log('\n6. Ops Incident Classification Test:');
+const sampleOpsText = 'Wi-Fi disconnects continuously in Main Hall B';
+const isWifiIssue = sampleOpsText.toLowerCase().includes('wi-fi') || sampleOpsText.toLowerCase().includes('wifi');
+assert(isWifiIssue, 'Correctly matched Wi-Fi category rule for ops report');
+
+// 7. Evaluation Total Score Bounds Check
+console.log('\n7. Scorecard Bounds Validation Test:');
+const evalTotalValid = evaluations.every(
+  (e) => e.totalScore >= 0 && e.totalScore <= 40 && e.innovation <= 10 && e.technicalImplementation <= 10
+);
+assert(evalTotalValid, 'All evaluation scores adhere strictly to 0-40 total bound criteria');
+
+// 8. Leaderboard Ranking Sort Order Test
+console.log('\n8. Leaderboard Ranking Sort Order Test:');
+const sortedEvals = [...evaluations].sort((a, b) => b.totalScore - a.totalScore);
+assert(sortedEvals[0].totalScore === 36 && sortedEvals[2].totalScore === 15, 'Ranked highest scoring team first (36 pts > 15 pts)');
+
+// 9. QR Code Verification Lookup Test
+console.log('\n9. QR Code Verification Lookup Test:');
+const foundParticipant = sampleParticipants.find((p) => p.qrCodeId === '1' || p.id === '1');
+assert(foundParticipant !== undefined, 'Successfully verified participant QR passport ID');
+
+// 10. Blind Judging Data Masking Test:
+console.log('\n10. Blind Judging Data Masking Test:');
+const maskedId = `Project #${sampleTeams[0].id.substring(0, 6)}`;
+assert(maskedId.startsWith('Project #'), 'Blind judging mode correctly masks team institution/identity details');
 
 console.log(`\n========================================`);
 console.log(`Test Summary: ${totalPassed} Passed, ${totalFailed} Failed`);

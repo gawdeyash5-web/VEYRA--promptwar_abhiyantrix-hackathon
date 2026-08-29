@@ -30,46 +30,52 @@ export const Navbar: React.FC<NavbarProps> = ({
               </span>
             </div>
             <div className="hidden md:flex items-center space-x-1.5 text-xs text-slate-400 pl-2 border-l border-white/10">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true"></span>
               <span className="font-semibold text-slate-300">LIVE OPERATIONAL VIEW</span>
             </div>
           </div>
 
-          {/* Center: Role Switcher Tabs */}
-          <nav className="flex items-center bg-[#141b2d] p-1 rounded-lg border border-white/10">
+          {/* Center: Role Switcher Navigation Tabs */}
+          <nav className="flex items-center bg-[#141b2d] p-1 rounded-lg border border-white/10" aria-label="User role navigation">
             <button
               onClick={() => onRoleChange('participant')}
+              aria-pressed={currentRole === 'participant'}
+              aria-label="Switch to Participant Dashboard view"
               className={`flex items-center space-x-1.5 px-3 py-1 rounded-md text-xs font-medium transition-all ${
                 currentRole === 'participant'
                   ? 'bg-sky-600 text-white shadow-sm font-semibold'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              <Users className="w-3.5 h-3.5" />
+              <Users className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Participant</span>
             </button>
 
             <button
               onClick={() => onRoleChange('judge')}
+              aria-pressed={currentRole === 'judge'}
+              aria-label="Switch to Judge Scorecard portal view"
               className={`flex items-center space-x-1.5 px-3 py-1 rounded-md text-xs font-medium transition-all ${
                 currentRole === 'judge'
                   ? 'bg-sky-600 text-white shadow-sm font-semibold'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              <Gavel className="w-3.5 h-3.5" />
+              <Gavel className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Judge</span>
             </button>
 
             <button
               onClick={() => onRoleChange('organizer')}
+              aria-pressed={currentRole === 'organizer'}
+              aria-label="Switch to Organizer Command Center view"
               className={`flex items-center space-x-1.5 px-3 py-1 rounded-md text-xs font-medium transition-all ${
                 currentRole === 'organizer'
                   ? 'bg-sky-600 text-white shadow-sm font-semibold'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              <Cpu className="w-3.5 h-3.5" />
+              <Cpu className="w-3.5 h-3.5" aria-hidden="true" />
               <span>Organizer</span>
             </button>
           </nav>
@@ -77,8 +83,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Right: Event Pulse Pill & Seed Demo Data */}
           <div className="flex items-center space-x-2.5">
             {/* Event Pulse Pill */}
-            <div className="hidden lg:flex items-center space-x-1.5 bg-[#141b2d] px-2.5 py-1 rounded-md text-xs border border-white/10">
-              <Activity className="w-3.5 h-3.5 text-emerald-400" />
+            <div className="hidden lg:flex items-center space-x-1.5 bg-[#141b2d] px-2.5 py-1 rounded-md text-xs border border-white/10" aria-label={`Current Event Pulse Score: ${eventPulseScore} out of 100`}>
+              <Activity className="w-3.5 h-3.5 text-emerald-400" aria-hidden="true" />
               <span className="font-bold text-white font-mono">{eventPulseScore}</span>
               <span className="text-[10px] text-slate-400 font-mono uppercase">PULSE</span>
             </div>
@@ -87,10 +93,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={onSeedDemoData}
               disabled={isSeeding}
+              aria-label="Seed demo data into Cloud Firestore"
               className="flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs text-slate-300 bg-[#141b2d] hover:bg-slate-800 border border-white/10 transition-all disabled:opacity-50"
               title="Seed demo data into Firestore"
             >
-              <Database className={`w-3.5 h-3.5 ${isSeeding ? 'animate-spin text-sky-400' : ''}`} />
+              <Database className={`w-3.5 h-3.5 ${isSeeding ? 'animate-spin text-sky-400' : ''}`} aria-hidden="true" />
               <span className="hidden sm:inline text-[11px] font-medium">{isSeeding ? 'Seeding...' : 'Seed Data'}</span>
             </button>
           </div>

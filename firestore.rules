@@ -2,9 +2,13 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
+    // Helper Authorization Functions
     function isAuthenticated() {
       return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
     }
 
     function isOrganizer() {
@@ -21,46 +25,69 @@ service cloud.firestore {
       );
     }
 
+    // Score Range Validation (0-10 per criteria, total 0-40)
+    function isValidEvaluationData(data) {
+      return data.totalScore >= 0 && data.totalScore <= 40 &&
+             data.innovation >= 0 && data.innovation <= 10 &&
+             data.technicalImplementation >= 0 && data.technicalImplementation <= 10 &&
+             data.impact >= 0 && data.impact <= 10 &&
+             data.presentation >= 0 && data.presentation <= 10;
+    }
+
+    // Ops Report Status Validation
+    function isValidOpsStatus(status) {
+      return status in ['OPEN', 'ACKNOWLEDGED', 'IN_PROGRESS', 'RESOLVED'];
+    }
+
+    // Document Match Rules
+
     match /users/{userId} {
       allow read: if true;
       allow create: if true;
-      allow update: if isAuthenticated() && (request.auth.uid == userId || isOrganizer());
+      allow update: if isAuthenticated() && (isOwner(userId) || isOrganizer());
       allow delete: if isOrganizer();
     }
 
     match /events/{eventId} {
       allow read: if true;
-      allow write: if isOrganizer() || true;
+      allow write: if isOrganizer();
     }
 
     match /participants/{participantId} {
       allow read: if true;
       allow create, update: if true;
+      allow delete: if isOrganizer();
     }
 
     match /teams/{teamId} {
       allow read: if true;
       allow create, update: if true;
+      allow delete: if isOrganizer();
     }
 
     match /submissions/{submissionId} {
       allow read: if true;
       allow create, update: if true;
+      allow delete: if isOrganizer();
     }
 
     match /evaluations/{evaluationId} {
       allow read: if true;
-      allow create, update: if isJudge() || isOrganizer() || true;
+      allow create, update: if request.resource.data.totalScore >= 0 && request.resource.data.totalScore <= 40;
+      allow delete: if isOrganizer();
     }
 
     match /announcements/{announcementId} {
       allow read: if true;
-      allow create, update: if isOrganizer() || true;
+      allow create, update: if true;
+      allow delete: if isOrganizer();
     }
 
     match /ops_reports/{reportId} {
       allow read: if true;
-      allow create, update: if true;
+      allow create: if true;
+      allow update: if isValidOpsStatus(request.resource.data.status);
+      allow delete: if isOrganizer();
     }
 
     match /activity_logs/{logId} {
@@ -68,8 +95,9 @@ service cloud.firestore {
       allow create: if true;
     }
 
+    // Default Deny Unmatched Collections
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if false;
     }
   }
 }

@@ -64,57 +64,50 @@ export const QRCheckInModal: React.FC<QRCheckInModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-      <div className="w-full max-w-lg rounded-2xl bg-slate-900 border border-slate-800 p-6 shadow-2xl space-y-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn" role="dialog" aria-modal="true" aria-labelledby="checkin-modal-title">
+      <div className="veyra-card w-full max-w-md shadow-2xl space-y-4">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-              <UserCheck className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-base font-bold text-slate-100">ATTENDEE CHECK-IN CENTER</h3>
-              <p className="text-xs text-slate-400">Scan QR Code or enter Participant ID / Email</p>
-            </div>
+        <div className="flex items-center justify-between border-b border-white/10 pb-3">
+          <div className="flex items-center space-x-2">
+            <UserCheck className="w-4 h-4 text-sky-400" aria-hidden="true" />
+            <h2 id="checkin-modal-title" className="text-base font-bold text-white">ATTENDEE CHECK-IN CENTER</h2>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-200">
-            <X className="w-5 h-5" />
+          <button
+            onClick={onClose}
+            aria-label="Close Check-in modal"
+            className="text-slate-400 hover:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 rounded p-1"
+          >
+            <X className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
 
-        {/* QR Camera Scanner Simulation Visual */}
-        <div className="relative rounded-xl bg-slate-950 border border-slate-800 p-6 flex flex-col items-center justify-center text-center space-y-3 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/5 to-transparent pointer-events-none"></div>
-          <div className="w-32 h-32 border-2 border-dashed border-cyan-400/60 rounded-xl flex items-center justify-center relative">
-            <QrCode className="w-16 h-16 text-cyan-400 animate-pulse" />
-            <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-cyan-400"></div>
-            <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-cyan-400"></div>
-            <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-cyan-400"></div>
-            <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-cyan-400"></div>
+        {/* QR Camera Visual */}
+        <div className="veyra-subcard flex flex-col items-center justify-center text-center space-y-2 py-4">
+          <div className="w-24 h-24 border-2 border-dashed border-sky-400 rounded-lg flex items-center justify-center relative">
+            <QrCode className="w-12 h-12 text-sky-400 animate-pulse" aria-hidden="true" />
           </div>
-          <p className="text-xs text-slate-400 font-mono">Camera Scanner Active • Point QR Code Here</p>
+          <p className="text-[11px] text-slate-400 font-mono">Scanner Active • Point QR Code Here</p>
         </div>
 
-        {/* Manual ID Search Fallback Form */}
-        <form onSubmit={handleManualCheckIn} className="space-y-3">
-          <label className="text-xs font-semibold text-slate-300 block">
-            Manual ID / Email Verification Fallback:
+        {/* Manual Search Form */}
+        <form onSubmit={handleManualCheckIn} className="space-y-2 text-xs">
+          <label htmlFor="manual-checkin-input" className="font-semibold text-slate-300 block">
+            Manual Verification (ID, Name, or Email):
           </label>
           <div className="flex space-x-2">
             <div className="relative flex-1">
-              <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" aria-hidden="true" />
               <input
+                id="manual-checkin-input"
                 type="text"
-                placeholder="Enter VEYRA-PART-005 or Email/Name..."
+                placeholder="VEYRA-PART-005 or Email/Name..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                className="veyra-input pl-8 w-full"
+                required
               />
             </div>
-            <button
-              type="submit"
-              className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs transition-colors shadow-md shadow-cyan-600/20"
-            >
+            <button type="submit" className="veyra-btn-primary">
               Verify & Check In
             </button>
           </div>
@@ -123,21 +116,23 @@ export const QRCheckInModal: React.FC<QRCheckInModalProps> = ({
         {/* Feedback Alert */}
         {checkInResult && (
           <div
-            className={`p-4 rounded-xl text-xs flex items-start space-x-3 ${
+            role="status"
+            aria-live="polite"
+            className={`p-3 rounded-lg text-xs flex items-start space-x-2 ${
               checkInResult.success
-                ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-300'
-                : 'bg-rose-500/10 border border-rose-500/30 text-rose-300'
+                ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/80'
+                : 'bg-rose-950/60 text-rose-400 border border-rose-800/80'
             }`}
           >
             {checkInResult.success ? (
-              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+              <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
             ) : (
-              <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
             )}
             <div>
               <p className="font-bold">{checkInResult.message}</p>
               {checkInResult.participant && (
-                <p className="text-[11px] opacity-80 mt-1">
+                <p className="text-[11px] opacity-90 mt-0.5">
                   Team: {checkInResult.participant.teamName || 'Unassigned'} • Role: {checkInResult.participant.role}
                 </p>
               )}

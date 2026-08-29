@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { Sparkles, UserPlus, CheckCircle2, X, Zap } from 'lucide-react';
+import { UserPlus, CheckCircle2, X, Filter } from 'lucide-react';
 import { Participant, CandidateMatch } from '../types';
 import { calculateCandidateMatch } from '../utils/smartMatching';
-import { explainMatchWithAI } from '../services/api';
 
 interface SmartMatchModalProps {
   isOpen: boolean;
@@ -20,36 +19,20 @@ export const SmartMatchModal: React.FC<SmartMatchModalProps> = ({
   onSendInvite,
 }) => {
   const [invitedIds, setInvitedIds] = useState<string[]>([]);
-  const [aiExplanations, setAiExplanations] = useState<Record<string, string>>({});
-  const [loadingAiId, setLoadingAiId] = useState<string | null>(null);
+  const [selectedRoleFilter, setSelectedRoleFilter] = useState<string>('ALL');
 
   if (!isOpen) return null;
 
-  // Filter candidates excluding self & existing team members
   const candidates = allParticipants.filter(
-    (p) => p.id !== currentParticipant.id && p.teamId !== currentParticipant.teamId
+    (p) =>
+      p.id !== currentParticipant.id &&
+      p.teamId !== currentParticipant.teamId &&
+      (selectedRoleFilter === 'ALL' || p.role.toLowerCase().includes(selectedRoleFilter.toLowerCase()))
   );
 
   const candidateMatches: CandidateMatch[] = candidates
     .map((cand) => calculateCandidateMatch(currentParticipant, cand))
     .sort((a, b) => b.matchScore - a.matchScore);
-
-  const handleFetchAiExplanation = async (match: CandidateMatch) => {
-    setLoadingAiId(match.candidate.id);
-    try {
-      const explanation = await explainMatchWithAI(
-        currentParticipant.skills || [],
-        currentParticipant.role,
-        match.candidate.skills || [],
-        match.candidate.role
-      );
-      setAiExplanations((prev) => ({ ...prev, [match.candidate.id]: explanation }));
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingAiId(null);
-    }
-  };
 
   const handleInvite = (candidate: Participant) => {
     onSendInvite(candidate.id, candidate.name);
@@ -57,119 +40,94 @@ export const SmartMatchModal: React.FC<SmartMatchModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-      <div className="w-full max-w-2xl rounded-2xl bg-slate-900 border border-slate-800 p-6 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-base font-bold text-slate-100">SMART TEAM FORMATION ENGINE</h3>
-              <p className="text-xs text-slate-400">Deterministic skill overlap + Gemini rationale generator</p>
-            </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn" role="dialog" aria-modal="true" aria-labelledby="smart-match-title">
+      <div className="veyra-card w-full max-w-2xl shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between border-b border-white/10 pb-3">
+          <div>
+            <h2 id="smart-match-title" className="text-lg font-bold text-white">Find Teammates</h2>
+            <p className="text-xs text-slate-400">Discover compatible hackers based on complementary skills and interests.</p>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-200">
-            <X className="w-5 h-5" />
+          <button
+            onClick={onClose}
+            aria-label="Close Find Teammates modal"
+            className="text-slate-400 hover:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 rounded p-1"
+          >
+            <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 
-        {/* Current User Profile Summary */}
-        <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between text-xs">
-          <div>
-            <span className="text-slate-400">Matching for: </span>
-            <span className="font-bold text-slate-100">{currentParticipant.name}</span>
-            <span className="text-slate-500"> ({currentParticipant.role})</span>
-          </div>
-          <div className="flex space-x-1">
-            {(currentParticipant.skills || []).slice(0, 3).map((sk) => (
-              <span key={sk} className="px-2 py-0.5 rounded bg-slate-900 text-slate-300 border border-slate-800">
-                {sk}
-              </span>
-            ))}
-          </div>
+        {/* Role Filter Bar */}
+        <div className="flex items-center space-x-2 text-xs">
+          <Filter className="w-3.5 h-3.5 text-slate-400" aria-hidden="true" />
+          <label htmlFor="role-filter-select" className="font-medium text-slate-300">Role Filter:</label>
+          <select
+            id="role-filter-select"
+            value={selectedRoleFilter}
+            onChange={(e) => setSelectedRoleFilter(e.target.value)}
+            className="veyra-input px-2.5 py-1"
+          >
+            <option value="ALL">All Roles</option>
+            <option value="Frontend">Frontend</option>
+            <option value="Backend">Backend</option>
+            <option value="ML">ML & AI</option>
+            <option value="Designer">Product Designer</option>
+          </select>
         </div>
 
-        {/* Candidate List */}
-        <div className="space-y-4">
+        {/* Candidate Cards List */}
+        <div className="space-y-3">
           {candidateMatches.length === 0 ? (
-            <div className="text-center py-8 text-xs text-slate-500">No compatible unassigned candidates found.</div>
+            <div className="text-center py-6 text-xs text-slate-400">No unassigned candidates found.</div>
           ) : (
             candidateMatches.slice(0, 5).map((match) => {
               const isInvited = invitedIds.includes(match.candidate.id);
-              const customExplanation = aiExplanations[match.candidate.id] || match.aiExplanation;
-              const isLoadingThis = loadingAiId === match.candidate.id;
 
               return (
-                <div
-                  key={match.candidate.id}
-                  className="p-4 rounded-xl bg-slate-950/70 border border-slate-800 flex flex-col space-y-3 hover:border-slate-700 transition-colors"
-                >
+                <div key={match.candidate.id} className="veyra-subcard space-y-3">
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="flex items-center space-x-2">
-                        <h4 className="font-bold text-slate-100 text-sm">{match.candidate.name}</h4>
-                        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
-                          {match.candidate.role}
-                        </span>
-                        <span className="text-[11px] text-slate-400">{match.candidate.college}</span>
+                        <h3 className="font-bold text-white text-sm">{match.candidate.name}</h3>
+                        <span className="badge-info">{match.candidate.role}</span>
+                        <span className="text-xs text-slate-400">{match.candidate.college}</span>
                       </div>
                       <div className="flex flex-wrap gap-1 mt-2">
                         {match.candidate.skills.map((sk) => (
-                          <span
-                            key={sk}
-                            className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900 text-slate-300 border border-slate-800"
-                          >
+                          <span key={sk} className="text-[11px] px-2 py-0.5 rounded bg-[#111726] text-slate-300 border border-white/10">
                             {sk}
                           </span>
                         ))}
                       </div>
                     </div>
 
-                    {/* Match Score Badge */}
                     <div className="text-right">
-                      <div className="text-lg font-black text-emerald-400 font-mono">{match.matchScore}% MATCH</div>
+                      <span className="text-base font-extrabold text-emerald-400 font-mono">
+                        {match.matchScore}% Match
+                      </span>
                     </div>
                   </div>
 
-                  {/* Why Rationale Box */}
-                  <div className="p-3 rounded-lg bg-slate-900/90 border border-slate-800 text-xs text-slate-300">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-semibold text-slate-400 uppercase text-[10px]">Match Rationale:</span>
-                      <button
-                        onClick={() => handleFetchAiExplanation(match)}
-                        disabled={isLoadingThis}
-                        className="text-[10px] text-purple-400 hover:text-purple-300 flex items-center space-x-1"
-                      >
-                        <Sparkles className="w-3 h-3" />
-                        <span>{isLoadingThis ? 'Generating...' : 'Refresh AI Rationale'}</span>
-                      </button>
-                    </div>
-                    <p className="text-slate-300 italic">{customExplanation}</p>
-                  </div>
+                  <p className="text-xs text-slate-300 italic bg-[#111726] p-2.5 rounded-md border border-white/10">
+                    "{match.aiExplanation}"
+                  </p>
 
-                  {/* Invite Action */}
                   <div className="flex justify-end pt-1">
                     <button
                       onClick={() => handleInvite(match.candidate)}
                       disabled={isInvited}
-                      className={`flex items-center space-x-1.5 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                        isInvited
-                          ? 'bg-slate-800 text-slate-400 cursor-not-allowed'
-                          : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-md shadow-purple-600/20'
-                      }`}
+                      aria-label={isInvited ? `Invite already sent to ${match.candidate.name}` : `Send team invitation to ${match.candidate.name}`}
+                      className={isInvited ? 'veyra-btn-secondary' : 'veyra-btn-primary'}
                     >
                       {isInvited ? (
-                        <>
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                        <span className="flex items-center space-x-1">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" aria-hidden="true" />
                           <span>Invite Sent</span>
-                        </>
+                        </span>
                       ) : (
-                        <>
-                          <UserPlus className="w-3.5 h-3.5" />
-                          <span>Send Team Invite</span>
-                        </>
+                        <span className="flex items-center space-x-1">
+                          <UserPlus className="w-3.5 h-3.5" aria-hidden="true" />
+                          <span>Invite to Team</span>
+                        </span>
                       )}
                     </button>
                   </div>

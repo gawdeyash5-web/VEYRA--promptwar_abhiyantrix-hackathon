@@ -1,5 +1,5 @@
 import React from 'react';
-import { QrCode, X, CheckCircle2, Shield } from 'lucide-react';
+import { X, CheckCircle2 } from 'lucide-react';
 import { Participant } from '../types';
 
 interface ParticipantQRModalProps {
@@ -16,34 +16,37 @@ export const ParticipantQRModal: React.FC<ParticipantQRModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-      <div className="w-full max-w-sm rounded-2xl bg-slate-900 border border-slate-800 p-6 shadow-2xl space-y-6 text-center">
-        <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-          <div className="flex items-center space-x-2">
-            <Shield className="w-4 h-4 text-cyan-400" />
-            <span className="text-xs font-bold text-slate-200">DIGITAL EVENT PASSPORT</span>
-          </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-200">
-            <X className="w-4 h-4" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn" role="dialog" aria-modal="true" aria-labelledby="qr-pass-title">
+      <div className="veyra-card max-w-sm w-full text-center space-y-4 shadow-2xl">
+        <div className="flex justify-between items-center border-b border-white/10 pb-3">
+          <h2 id="qr-pass-title" className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+            MY EVENT PASS
+          </h2>
+          <button
+            onClick={onClose}
+            aria-label="Close Event Pass modal"
+            className="text-slate-400 hover:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 rounded p-1"
+          >
+            <X className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
 
         <div>
-          <h3 className="text-lg font-bold text-slate-100">{participant.name}</h3>
+          <h3 className="text-lg font-bold text-white">{participant.name}</h3>
           <p className="text-xs text-slate-400">{participant.college}</p>
-          <p className="text-[11px] font-mono text-cyan-400 mt-0.5">{participant.role}</p>
+          <p className="text-xs font-semibold text-sky-400 mt-0.5">{participant.role}</p>
         </div>
 
-        {/* QR Code Container */}
-        <div className="p-6 rounded-2xl bg-white flex flex-col items-center justify-center space-y-2 shadow-inner">
+        {/* QR Code Pass Container */}
+        <div className="p-4 rounded-xl bg-[#182032] border border-white/10 flex flex-col items-center justify-center space-y-2">
           <img
             src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(
               participant.qrCodeId
             )}`}
-            alt="Participant QR Code"
-            className="w-40 h-40 object-contain"
+            alt={`Digital QR Pass for ${participant.name}`}
+            className="w-40 h-40 object-contain rounded-md"
           />
-          <span className="text-xs font-mono font-bold text-slate-900 tracking-wider">
+          <span className="text-xs font-mono font-bold text-white tracking-wider">
             {participant.qrCodeId}
           </span>
         </div>
@@ -51,13 +54,13 @@ export const ParticipantQRModal: React.FC<ParticipantQRModalProps> = ({
         {/* Check-In Status */}
         <div>
           {participant.checkedIn ? (
-            <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center justify-center space-x-1.5">
-              <CheckCircle2 className="w-4 h-4" />
-              <span>OFFICIALLY CHECKED IN</span>
+            <div className="p-2 rounded-lg bg-emerald-950/60 text-emerald-400 text-xs font-semibold flex items-center justify-center space-x-1.5 border border-emerald-800/80">
+              <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
+              <span>Checked in at venue</span>
             </div>
           ) : (
-            <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold">
-              PENDING CHECK-IN AT VENUE DESK
+            <div className="p-2 rounded-lg bg-amber-950/60 text-amber-400 text-xs font-semibold border border-amber-800/80">
+              Pending Check-in at Desk
             </div>
           )}
         </div>
